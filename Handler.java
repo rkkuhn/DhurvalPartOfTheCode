@@ -25,6 +25,8 @@ public class Handler implements Runnable{
             String body = "SERVER: " + clientUsername + " has entered the chat";
             System.out.println(body);
             Message messageToClient = new Message(false, clientUsername, body);
+            String encryptedMessage = CaesarCipher.encrypt(body); // Encrypt the message
+            messageToClient.setMessageBody(encryptedMessage);
 
             sendMessage(messageToClient);
         } catch (Exception e) {
@@ -37,6 +39,8 @@ public class Handler implements Runnable{
         for(Handler handler : clientHandlerList){
             try {
                 handler.objectOutputStream.writeObject(messageToSend);
+                String encryptedMessage = CaesarCipher.encrypt(messageToSend.getMessageBody()); // Encrypt the message body
+                handler.objectOutputStream.writeObject(new Message(messageToSend.messageToServer, messageToSend.getSender(), encryptedMessage));
                 handler.objectOutputStream.flush();
             } catch (Exception e) {
                 removeHandler();
@@ -50,6 +54,10 @@ public class Handler implements Runnable{
         String body = "SERVER: " + clientUsername + " has left the chat";
         Message messageToServer = new Message(true, clientUsername, body);
         Message messageToClient = new Message(false, clientUsername, body);
+        String encryptedMessageServer = CaesarCipher.encrypt(body); // Encrypt the message for server
+        messageToServer.setMessageBody(encryptedMessageServer);
+        String encryptedMessageClient = CaesarCipher.encrypt(body); // Encrypt the message for clients
+        messageToClient.setMessageBody(encryptedMessageClient);
 
         sendMessage(messageToClient);
         sendMessage(messageToServer);
@@ -78,6 +86,8 @@ public class Handler implements Runnable{
         while(socket.isConnected()){
             try {
                 messageFromClient = (Message)objectInputStream.readObject();
+                String decryptedMessage = CaesarCipher.decrypt(messageFromClient.getMessageBody()); // Decrypt the message
+                messageFromClient.setMessageBody(decryptedMessage);
 
                 if(messageFromClient.getMessageBody().equalsIgnoreCase("quit")){
                     String message = this.clientUsername + " has left the chat";
@@ -94,5 +104,4 @@ public class Handler implements Runnable{
             }
         }
     }
-
 }
