@@ -43,8 +43,9 @@ public class Client {
             while(socket.isConnected()){
                 //TODO: Parser
                 String messageToSend = scanner.nextLine();
-                Message messageToServer = new Message(true, this.username, messageToSend);
-                Message messageToClient = new Message(false, this.username, messageToSend);
+                String encryptedMessage = CaesarCipher.encrypt(messageToSend); // Encrypt the message
+                Message messageToServer = new Message(true, this.username, encryptedMessage);
+                Message messageToClient = new Message(false, this.username, encryptedMessage);
                 objectOutputStream.writeObject(messageToClient);
                 
                 if(messageToSend.equalsIgnoreCase("quit")){
@@ -69,8 +70,9 @@ public class Client {
 
                 while(socket.isConnected()){
                     try {
-                        messageFromGroupChat = (Message)objectInputStream.readObject();
-                        System.out.println(messageFromGroupChat.getSender() + ": " + messageFromGroupChat.getMessageBody());
+                        messageFromGroupChat = (Message) objectInputStream.readObject();
+                        String decryptedMessage = CaesarCipher.decrypt(messageFromGroupChat.getMessageBody()); // Decrypt the message
+                        System.out.println(messageFromGroupChat.getSender() + ": " + decryptedMessage);
                     } catch (Exception e) {
                         removeClient();
                         break;
@@ -98,5 +100,4 @@ public class Client {
             e.printStackTrace();
         }
     }
-
 }
